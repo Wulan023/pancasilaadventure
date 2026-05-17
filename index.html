@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land of Pancasila - Game Edukasi Kelas 4</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & Orbitron untuk Nuansa Gaming -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ToneJS untuk Efek Suara Berkualitas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .gaming-title {
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+        .neon-border {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.8);
+        }
+        .neon-border-gold {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+            border: 1px solid rgba(245, 158, 11, 0.8);
+        }
+        .monster-glow {
+            filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.7));
+        }
+        .hero-glow {
+            filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.7));
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 3px;
+        }
+        /* Shake & Damage Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.2s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: floating 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Background Canvas Animasi Partikel -->
+    <canvas id="particleCanvas" class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-40"></canvas>
+
+    <!-- Header / Navigasi Atas Game -->
+    <header class="bg-slate-900/90 border-b border-amber-500/30 p-4 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-amber-500 text-2xl animate-pulse"></i>
+                <h1 class="gaming-title text-sm md:text-xl font-black text-amber-400 tracking-wider">PANCASILA ADVENTURE - BU WULAN</h1>
+            </div>
+            <!-- Audio Toggle & Status -->
+            <div class="flex items-center gap-4">
+                <div id="goldDisplay" class="bg-slate-800 border border-yellow-500/50 px-3 py-1 rounded-full text-yellow-400 font-bold flex items-center gap-2 text-xs md:text-sm">
+                    <i class="fa-solid fa-coins text-yellow-500"></i>
+                    <span id="goldCount">0</span> Gold
+                </div>
+                <button id="musicToggle" onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center border border-slate-600 transition" title="Aktifkan Musik Latar">
+                    <i id="musicIcon" class="fa-solid fa-volume-mute text-slate-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notifikasi Announcer Ala Mobile Legends -->
+    <div id="announcerBanner" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white font-extrabold px-8 py-3 rounded-lg border-2 border-yellow-400 shadow-2xl scale-0 transition-transform duration-300 text-center tracking-widest uppercase text-lg orbitron">
+        Double Kill!
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 flex flex-col justify-center">
+        
+        <section id="startScreen" class="bg-slate-900/80 border-2 border-amber-500/40 p-6 md:p-12 rounded-2xl text-center shadow-2xl my-8 relative overflow-hidden backdrop-blur-md">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
+            
+            <span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">KARYA BU WULAN</span>
+            <h2 class="gaming-title text-2xl md:text-5xl font-black text-white leading-tight mb-4">
+                Edukasi Petualangan Kelas IV <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500">Bersama Bu Wulan</span>
+            </h2>
+            <p class="text-slate-300 max-w-xl mx-auto mb-8 text-sm md:text-base">
+                Hai kawan-kawan Kelas 4! Bersiaplah memilih Hero andalanmu, hancurkan Turret kebodohan, dan taklukkan monster egois dengan kekuatan nilai-nilai Pancasila!
+            </p>
+
+            <!-- Input Nama Murid -->
+            <div class="max-w-md mx-auto mb-8">
+                <label for="playerNameInput" class="block text-amber-400 text-left font-semibold mb-2">Nama Prajurit Kecil:</label>
+                <input type="text" id="playerNameInput" placeholder="Masukkan nama panggilanmu..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition text-center font-bold text-lg">
+            </div>
+
+            <button onclick="goToHeroSelection()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black px-10 py-4 rounded-xl text-lg tracking-wider shadow-lg shadow-amber-500/30 transition transform hover:-translate-y-1">
+                MULAI PERMAINAN <i class="fa-solid fa-gamepad ml-2"></i>
+            </button>
+        </section>
+
+        <section id="heroScreen" class="hidden bg-slate-900/80 border-2 border-blue-500/40 p-6 md:p-8 rounded-2xl text-center shadow-2xl my-8 backdrop-blur-md">
+            <h2 class="gaming-title text-2xl md:text-3xl font-black text-amber-400 mb-2">PILIH HERO ANDALANMU</h2>
+            <p class="text-slate-400 text-xs md:text-sm mb-6">Masing-masing Hero memiliki kekuatan spesial untuk membantumu menjawab soal!</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-left">
+                <!-- Hero 1: Garuda Guardian -->
+                <div id="heroCard-1" onclick="selectHero(1)" class="cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-amber-400 transition relative overflow-hidden group">
+                    <div class="absolute top-2 right-2 text-3xl opacity-10 group-hover:opacity-30 transition"><i class="fa-solid fa-shield-cat"></i></div>
+                    <div class="text-center mb-4">
+                        <span class="inline-block p-4 rounded-full bg-amber-500/20 text-amber-400 mb-3 text-3xl"><i class="fa-solid fa-shield-halved"></i></span>
+                        <h3 class="font-black text-lg text-white">GARUDA GUARDIAN</h3>
+                        <span class="text-xs font-bold text-slate-500">Tipe: Tank</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Prajurit tangguh pelindung kebenaran. Memiliki ketahanan yang kuat terhadap serangan.</p>
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-xs text-amber-300">
+                        <strong>Spesial:</strong> Menghapus 1 jawaban salah gratis (Maks 2 kali).
+                    </div>
+                </div>
+
+                <!-- Hero 2: Pancasila Ranger -->
+                <div id="heroCard-2" onclick="selectHero(2)" class="cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-amber-400 transition relative overflow-hidden group">
+                    <div class="absolute top-2 right-2 text-3xl opacity-10 group-hover:opacity-30 transition"><i class="fa-solid fa-fire"></i></div>
+                    <div class="text-center mb-4">
+                        <span class="inline-block p-4 rounded-full bg-red-500/20 text-red-400 mb-3 text-3xl"><i class="fa-solid fa-gun"></i></span>
+                        <h3 class="font-black text-lg text-white">PANCASILA RANGER</h3>
+                        <span class="text-xs font-bold text-slate-500">Tipe: Marksman</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Penembak jitu yang mengandalkan keakuratan berpikir. Menyerang dari kejauhan.</p>
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-xs text-amber-300">
+                        <strong>Spesial:</strong> Mendapat Gold 1.5x lebih banyak saat menjawab benar beruntun.
+                    </div>
+                </div>
+
+                <!-- Hero 3: Srikandi Mage -->
+                <div id="heroCard-3" onclick="selectHero(3)" class="cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-amber-400 transition relative overflow-hidden group">
+                    <div class="absolute top-2 right-2 text-3xl opacity-10 group-hover:opacity-30 transition"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="text-center mb-4">
+                        <span class="inline-block p-4 rounded-full bg-purple-500/20 text-purple-400 mb-3 text-3xl"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                        <h3 class="font-black text-lg text-white">SRIKANDI MAGE</h3>
+                        <span class="text-xs font-bold text-slate-500">Tipe: Mage</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Penyihir berhati lembut yang menguasai siasat gotong royong untuk menyembuhkan luka.</p>
+                    <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-xs text-amber-300">
+                        <strong>Spesial:</strong> Mengembalikan 20 HP yang hilang setelah 3 jawaban benar beruntun.
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-10 py-4 rounded-xl shadow-lg transition tracking-wide">
+                KONFIRMASI HERO <i class="fa-solid fa-check ml-2"></i>
+            </button>
+        </section>
+
+        <section id="mapScreen" class="hidden bg-slate-900/90 border-2 border-amber-500/40 p-4 md:p-8 rounded-2xl shadow-2xl my-4 backdrop-blur-md">
+            <div class="text-center mb-6">
+                <h2 class="gaming-title text-2xl font-black text-amber-400">PETA LAND OF PANCASILA</h2>
+                <p id="playerRankDisplay" class="text-blue-400 font-bold tracking-widest text-sm">RANK: WARRIOR III</p>
+            </div>
+
+            <!-- Tampilan Peta Visual (Jalur Kiri & Kanan ala MOBA) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Bab 3 Lane -->
+                <div id="laneBab3" class="bg-slate-950 border border-amber-500/30 p-5 rounded-xl relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl"></div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">LANE 1 (AKTIF)</span>
+                            <span class="text-xs text-slate-400"><i class="fa-solid fa-gamepad"></i> Bab 3</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">Kerja Sama di Lingkunganku</h3>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                            Mempelajari kerja sama dalam keberagaman, gotong royong di sekolah & masyarakat, serta bangga menggunakan Bahasa Indonesia sebagai pemersatu bangsa.
+                        </p>
+                        <!-- Progress info -->
+                        <div class="mb-4 bg-slate-900 p-3 rounded-lg border border-slate-800">
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Progress Soal:</span>
+                                <span id="bab3ProgressText">0 / 20</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-2">
+                                <div id="bab3ProgressBar" class="bg-amber-400 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="launchChapter(3)" id="btnLaunchBab3" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3 rounded-xl transition tracking-wide text-sm shadow-md">
+                        SERANG LANE 1 <i class="fa-solid fa-swords ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Bab 4 Lane -->
+                <div id="laneBab4" class="bg-slate-950 border border-slate-800 p-5 rounded-xl relative overflow-hidden flex flex-col justify-between opacity-50">
+                    <div id="lane4Overlay" class="absolute inset-0 bg-black/60 flex flex-col justify-center items-center z-10 p-4 text-center">
+                        <i class="fa-solid fa-lock text-3xl text-slate-500 mb-2"></i>
+                        <p class="font-bold text-slate-300 text-sm">LANE TERKUNCI</p>
+                        <p class="text-xs text-slate-400 max-w-[200px]">Selesaikan Lane 1 (Bab 3) terlebih dahulu untuk melanjutkan!</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-slate-800 text-slate-400 text-xs px-2.5 py-1 rounded-full font-bold">LANE 2</span>
+                            <span class="text-xs text-slate-400"><i class="fa-solid fa-gamepad"></i> Bab 4</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-white mb-2">Pancasila dalam Diriku</h3>
+                        <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                            Mempelajari makna sila Pancasila di masyarakat, menerapkan nilai Pancasila, sejarah dan tokoh perumus Pancasila, serta meneladani karakter keteladanannya.
+                        </p>
+                    </div>
+                    <button id="btnLaunchBab4" disabled class="w-full bg-slate-800 text-slate-500 font-extrabold py-3 rounded-xl transition cursor-not-allowed text-sm">
+                        SERANG LANE 2 <i class="fa-solid fa-lock ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Shop Item Button -->
+            <div class="flex flex-col sm:flex-row justify-between items-center bg-slate-950 border border-slate-800 p-4 rounded-xl gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="p-3 bg-yellow-500/10 text-yellow-500 rounded-lg text-xl"><i class="fa-solid fa-store"></i></span>
+                    <div>
+                        <h4 class="font-bold text-white text-sm">Toko Item Pancasila (Armory)</h4>
+                        <p class="text-xs text-slate-400">Gunakan Gold dari kemenanganmu untuk membeli item bantuan.</p>
+                    </div>
+                </div>
+                <button onclick="openShop()" class="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-sm tracking-wide transition flex items-center gap-2">
+                    BELANJA ITEM <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <div id="shopModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div class="bg-slate-900 border-2 border-yellow-500/50 rounded-2xl max-w-lg w-full p-6 relative">
+                <button onclick="closeShop()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                
+                <h3 class="gaming-title text-2xl font-black text-yellow-400 mb-4 text-center">ARMORY SHOP</h3>
+                <div class="flex justify-center mb-6">
+                    <span class="bg-slate-950 border border-yellow-500/30 px-4 py-1.5 rounded-full text-yellow-400 font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-coins text-yellow-500"></i> <span id="shopGoldCount">0</span> Gold
+                    </span>
+                </div>
+
+                <div class="space-y-4 max-h-[300px] overflow-y-auto pr-2 mb-6">
+                    <!-- Item 1: Athena's Shield -->
+                    <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-yellow-500/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="p-3 bg-blue-500/20 text-blue-400 rounded-lg text-xl"><i class="fa-solid fa-shield-halved"></i></span>
+                            <div>
+                                <h4 class="font-bold text-sm text-white">Athena's Shield</h4>
+                                <p class="text-xs text-slate-400">Kebal dari 1 kali jawaban salah (Auto-absorb).</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('shield', 200)" class="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+                            200 Gold
+                        </button>
+                    </div>
+
+                    <!-- Item 2: Blade of Despair -->
+                    <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-yellow-500/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="p-3 bg-red-500/20 text-red-400 rounded-lg text-xl"><i class="fa-solid fa-burst"></i></span>
+                            <div>
+                                <h4 class="font-bold text-sm text-white">Blade of Despair</h4>
+                                <p class="text-xs text-slate-400">Memberikan damage ganda pada musuh di pertanyaan berikutnya.</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('blade', 300)" class="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+                            300 Gold
+                        </button>
+                    </div>
+
+                    <!-- Item 3: Immortality potion -->
+                    <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-yellow-500/30 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="p-3 bg-emerald-500/20 text-emerald-400 rounded-lg text-xl"><i class="fa-solid fa-heart-circle-bolt"></i></span>
+                            <div>
+                                <h4 class="font-bold text-sm text-white">Immortality Potion</h4>
+                                <p class="text-xs text-slate-400">Kembali pulih penuh jika darah HP kamu habis.</p>
+                            </div>
+                        </div>
+                        <button onclick="buyItem('immortality', 400)" class="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+                            400 Gold
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                    <p class="text-amber-400 font-bold mb-1">Inventarismu saat ini:</p>
+                    <div id="inventoryContainer" class="flex gap-2 flex-wrap text-slate-400">
+                        Tidak ada item aktif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section id="battleScreen" class="hidden bg-slate-900/95 border-2 border-red-500/30 p-4 md:p-6 rounded-2xl shadow-2xl my-4 relative backdrop-blur-md">
+            
+            <!-- Bilah Status Pertempuran -->
+            <div class="flex justify-between items-center mb-6 bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                <span id="battleTitle" class="text-amber-400 font-black text-xs md:text-sm tracking-wide orbitron">PERTARUNGAN SEJAK DINI</span>
+                <span id="streakIndicator" class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 animate-bounce">
+                    <i class="fa-solid fa-fire text-red-500"></i> <span id="streakCount">0</span> Streak!
+                </span>
+            </div>
+
+            <!-- Tampilan Visual Hero vs Monster/Turret -->
+            <div class="grid grid-cols-2 gap-4 mb-8 relative items-center">
+                <!-- Sisi Kiri: Hero Player -->
+                <div id="heroGraphic" class="flex flex-col items-center justify-center p-3 relative bg-slate-950/40 rounded-xl border border-blue-500/20">
+                    <div class="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl md:text-5xl border-2 border-blue-400 hero-glow animate-float">
+                        <i id="heroVisualIcon" class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h4 id="heroNameVisual" class="font-black text-white text-sm md:text-base mt-3 uppercase tracking-wider text-center">GARUDA</h4>
+                    <!-- HP Player -->
+                    <div class="w-full max-w-[150px] mt-2">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">HP:</span>
+                            <span id="playerHpText" class="text-emerald-400 font-bold">100/100</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="playerHpBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sisi Kanan: Musuh (Turret / Monster) -->
+                <div id="enemyGraphic" class="flex flex-col items-center justify-center p-3 relative bg-slate-950/40 rounded-xl border border-red-500/20">
+                    <div id="enemyVisualIconWrapper" class="w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white text-3xl md:text-5xl border-2 border-red-400 monster-glow animate-float">
+                        <i id="enemyVisualIcon" class="fa-solid fa-dragon"></i>
+                    </div>
+                    <h4 id="enemyNameVisual" class="font-black text-rose-400 text-sm md:text-base mt-3 uppercase tracking-wider text-center">TURRET LALAI</h4>
+                    <!-- HP Enemy -->
+                    <div class="w-full max-w-[150px] mt-2">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">HP:</span>
+                            <span id="enemyHpText" class="text-rose-400 font-bold">100/100</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="enemyHpBar" class="bg-rose-500 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 rounded-2xl p-4 md:p-6 border border-slate-800 shadow-inner">
+                <div class="flex justify-between text-xs text-slate-400 mb-3">
+                    <span id="questionCategory">Bab 3 - Soal 1</span>
+                    <span id="questionIndexText">Soal 1 dari 20</span>
+                </div>
+                <p id="questionText" class="text-base md:text-lg font-semibold text-slate-100 mb-6 leading-relaxed">
+                    Sedang memuat pertanyaan pertempuran Pancasila...
+                </p>
+
+                <!-- Pilihan Jawaban -->
+                <div id="answersContainer" class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <!-- Tombol Pilihan Jawaban (A, B, C, D) akan di-render di sini secara dinamis -->
+                </div>
+            </div>
+
+            <!-- Pesan Balas Jasa / Feedback setelah menjawab -->
+            <div id="answerFeedback" class="hidden mt-4 p-4 rounded-xl border flex flex-col justify-between items-start md:flex-row md:items-center gap-4">
+                <div class="flex-grow">
+                    <h5 id="feedbackTitle" class="font-bold text-sm mb-1"></h5>
+                    <p id="feedbackExplanation" class="text-xs text-slate-300 leading-relaxed"></p>
+                </div>
+                <button onclick="nextBattleStep()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-2 rounded-lg text-xs transition whitespace-nowrap">
+                    LANJUTKAN <i class="fa-solid fa-forward ml-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="resultsScreen" class="hidden bg-slate-900/90 border-2 border-amber-500/50 p-6 md:p-10 rounded-2xl shadow-2xl my-8 backdrop-blur-md">
+            <div class="text-center mb-8">
+                <span class="inline-block p-4 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 text-4xl animate-pulse"><i class="fa-solid fa-crown"></i></span>
+                <h2 class="gaming-title text-3xl md:text-4xl font-black text-amber-400">PETUALANGAN SELESAI</h2>
+                <p class="text-slate-400 text-xs md:text-sm">Selamat, ksatria cilik Pancasila! Kamu telah memperjuangkan kebaikan di seluruh Land of Pancasila!</p>
+            </div>
+
+            <!-- Rincian Hasil & Skor -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <!-- Skor Bab 3 -->
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase">SKOR BAB 3</span>
+                    <h3 id="scoreBab3Display" class="text-3xl font-black text-amber-400 mt-2">0 / 20</h3>
+                    <p class="text-xs text-slate-400 mt-1">Kerja Sama di Lingkunganku</p>
+                </div>
+                <!-- Skor Bab 4 -->
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase">SKOR BAB 4</span>
+                    <h3 id="scoreBab4Display" class="text-3xl font-black text-blue-400 mt-2">0 / 20</h3>
+                    <p class="text-xs text-slate-400 mt-1">Pancasila dalam Diriku</p>
+                </div>
+                <!-- Total Nilai & Rank Akhir -->
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase">TOTAL NILAI & RANK</span>
+                    <h3 id="totalScorePercent" class="text-3xl font-black text-emerald-400 mt-2">0%</h3>
+                    <p id="rankBadgeDisplay" class="text-xs font-bold text-yellow-400 mt-1">WARRIOR I</p>
+                </div>
+            </div>
+
+            <div id="certificateArea" class="bg-white text-slate-900 p-6 md:p-8 rounded-xl border-8 border-double border-amber-600 mb-8 shadow-inner relative text-center">
+                <!-- Watermark -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+                    <i class="fa-solid fa-award text-[15rem]"></i>
+                </div>
+                
+                <p class="font-serif tracking-widest text-amber-700 text-xs md:text-sm font-bold uppercase mb-2">SERTIFIKAT PENGHARGAAN</p>
+                <h3 class="font-serif text-xl md:text-3xl font-bold text-slate-800 tracking-wide mb-1">KSATRIA UTAMA PANCASILA</h3>
+                <div class="w-24 h-1 bg-amber-600 mx-auto mb-6"></div>
+
+                <p class="text-xs md:text-sm text-slate-600 mb-2">Dengan bangga mempersembahkan penghargaan ini kepada prajurit kecil:</p>
+                <p id="certPlayerName" class="font-serif text-2xl md:text-3xl font-extrabold text-amber-800 tracking-wider mb-4 border-b border-dashed border-slate-300 inline-block px-8 py-1">NAMA MURID</p>
+                
+                <p class="text-xs md:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed mb-6">
+                    Telah sukses melintasi petualangan dan menyelesaikan seluruh misi pertempuran di <strong>"Land of Pancasila"</strong> untuk mata pelajaran Pendidikan Pancasila Kelas 4 SD, yang mencakup tema Kerja Sama di Lingkunganku dan Pancasila dalam Diriku dengan hasil yang sangat terpuji.
+                </p>
+
+                <!-- Tanggal & Tanda Tangan Guru -->
+                <div class="flex justify-between items-end max-w-md mx-auto text-xs md:text-sm mt-8 border-t border-slate-200 pt-4">
+                    <div>
+                        <p class="text-slate-500">Tanggal Selesai</p>
+                        <p id="certDate" class="font-bold text-slate-800">17 Mei 2026</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-slate-500">Guru Kelas IV</p>
+                        <div class="h-12 flex items-center justify-center italic text-amber-600 font-serif font-semibold text-base">Bu Wulan, S.Pd.</div>
+                        <p class="font-bold text-slate-800 border-t border-slate-300 w-32 pt-1 mx-auto">Tanda Tangan Guru</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aksi Share / Cetak -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="printCertificate()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 py-3 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> CETAK SERTIFIKAT
+                </button>
+                <button onclick="copyGameLink()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-share-nodes"></i> BAGIKAN GAME KE TEMAN
+                </button>
+                <button onclick="resetGame()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 font-bold px-6 py-3 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> MAIN LAGI
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 p-4 text-center text-xs text-slate-500">
+        <p>&copy; 2026 Land of Pancasila - Dibuat & Dikembangkan oleh <strong>Bu Wulan</strong> khusus untuk Media Pembelajaran Guru SD Kelas IV.</p>
+    </footer>
+
+    <script>
+        /* ---------------- DATA SOAL (20 BAB 3 & 20 BAB 4) ---------------- */
+        const questionsBab3 = [
+            {
+                q: "Apa contoh kerja sama di lingkungan rumah yang dapat meringankan pekerjaan orang tua?",
+                a: ["A. Membersihkan kamar sendiri saja", "B. Membantu ibu menyapu halaman rumah", "C. Menunggu diperintah barulah membantu", "D. Bermain game bersama adik"],
+                correct: 1,
+                exp: "Membantu ibu menyapu halaman rumah adalah bentuk kerja sama sukarela yang meringankan tugas keluarga di rumah."
+            },
+            {
+                q: "Kerja sama di lingkungan sekolah dapat mempererat hubungan...",
+                a: ["A. Permusuhan dan kebencian antar siswa", "B. Persaudaraan dan kekompakan sesama teman", "C. Jarak sosial antar kelompok kaya dan miskin", "D. Persaingan tidak sehat memperebutkan nilai"],
+                correct: 1,
+                exp: "Bekerja sama memperkuat kerukunan, persaudaraan, dan kekompakan antar murid sekolah."
+            },
+            {
+                q: "Ketika melihat teman yang berbeda suku sedang kesulitan membawa setumpuk buku, sikap terbaik kita adalah...",
+                a: ["A. Membiarkannya karena dia bukan teman dekat kita", "B. Menertawakan karena jalannya kelihatan lucu", "C. Membantu membawakan bukunya tanpa membedakan suku", "D. Melaporkan kepada guru agar guru saja yang membantunya"],
+                correct: 2,
+                exp: "Pancasila mengajarkan gotong royong tanpa membedakan suku, agama, ras, maupun latar belakang teman."
+            },
+            {
+                q: "Manakah di bawah ini contoh nyata dari kegiatan gotong royong di lingkungan masyarakat?",
+                a: ["A. Kerja bakti membersihkan selokan desa", "B. Melaksanakan tugas ronda malam sendirian", "C. Membeli makanan mewah di restoran terkenal", "D. Menonton konser musik di lapangan umum"],
+                correct: 0,
+                exp: "Kerja bakti selokan dikerjakan beramai-ramai demi kepentingan bersama seluruh warga desa."
+            },
+            {
+                q: "Salah satu manfaat utama dari adanya sikap gotong royong adalah pekerjaan menjadi...",
+                a: ["A. Terasa semakin berat dan melelahkan", "B. Selesai jauh lebih cepat dan ringan", "C. Menguras banyak biaya dan modal", "D. Terbengkalai karena terlalu banyak orang"],
+                correct: 1,
+                exp: "Dengan bergotong royong, pekerjaan berat menjadi ringan dan pekerjaan lama menjadi cepat selesai."
+            },
+            {
+                q: "Mengapa bangsa Indonesia harus merasa bangga menggunakan bahasa Indonesia?",
+                a: ["A. Karena bahasa Indonesia sulit sekali dipelajari suku lain", "B. Sebagai alat pemersatu bangsa di tengah keberagaman daerah", "C. Supaya bahasa daerah kita bisa punah dan terlupakan", "D. Agar kita terlihat keren saat berbicara dengan orang luar negeri"],
+                correct: 1,
+                exp: "Bahasa Indonesia berfungsi sebagai jembatan komunikasi dan pemersatu ratusan suku bangsa yang berbeda bahasa daerah."
+            },
+            {
+                q: "Saat kamu berdiskusi kelompok di kelas dengan teman yang berbeda suku daerah, bahasa apa yang paling tepat digunakan?",
+                a: ["A. Bahasa daerah suku asal kita masing-masing", "B. Bahasa Indonesia yang baik dan benar", "C. Bahasa asing agar terlihat pintar", "D. Menggunakan bahasa isyarat saja"],
+                correct: 1,
+                exp: "Menggunakan bahasa Indonesia menghormati keragaman dan memastikan semua anggota diskusi dapat mengerti dengan jelas."
+            },
+            {
+                q: "Semboyan 'Bhinneka Tunggal Ika' yang tertulis pada lambang negara kita memiliki arti...",
+                a: ["A. Berbeda-beda tetapi tetap satu jua", "B. Bersatu kita teguh bercerai kita runtuh", "C. Bersama-sama membangun kejayaan bangsa", "D. Menolak perbedaan demi kesatuan sepihak"],
+                correct: 0,
+                exp: "Bhinneka Tunggal Ika berarti meskipun bangsa Indonesia terdiri atas beraneka ragam suku dan agama, namun tetap satu kesatuan negara."
+            },
+            {
+                q: "Di bawah ini yang BUKAN merupakan contoh kerja sama di lingkungan sekolah adalah...",
+                a: ["A. Melakukan piket kebersihan kelas bersama kelompok", "B. Saling memberi jawaban contekan saat ujian nasional", "C. Menghias ruang kelas dalam rangka perayaan HUT RI", "D. Diskusi kelompok mencari solusi masalah IPA"],
+                correct: 1,
+                exp: "Mencontek adalah perbuatan tidak jujur dan bukan bentuk kerja sama yang diperbolehkan di sekolah."
+            },
+            {
+                q: "Sikap saling menghargai perbedaan keyakinan atau kebudayaan saat bekerja sama disebut dengan sikap...",
+                a: ["A. Egoisme", "B. Toleransi", "C. Individualis", "D. Sukuisme"],
+                correct: 1,
+                exp: "Toleransi adalah tenggang rasa dan saling menghargai perbedaan demi terciptanya perdamaian."
+            },
+            {
+                q: "Kegiatan gotong royong merupakan cerminan kepribadian luhur asli dari bangsa...",
+                a: ["A. Belanda", "B. Indonesia", "C. Jepang", "D. Amerika Serikat"],
+                correct: 1,
+                exp: "Gotong royong adalah warisan budaya leluhur bangsa Indonesia yang menjadi ciri khas identitas bangsa kita."
+            },
+            {
+                q: "Jika dalam kerja bakti RT ada tetangga yang tidak bisa hadir karena sedang sakit parah, sikap warga lainnya sebaiknya...",
+                a: ["A. Memberikan hukuman atau denda yang berat", "B. Memakluminya dan bergotong royong menjenguk serta mendoakannya", "C. Mengeluarkannya dari kepengurusan warga", "D. Menertawakan kondisinya yang lemah"],
+                correct: 1,
+                exp: "Bentuk kekeluargaan melahirkan empati dan permakluman bagi warga yang berhalangan karena sakit."
+            },
+            {
+                q: "Manakah kerja sama berikut ini yang bertujuan khusus menjaga keamanan lingkungan masyarakat?",
+                a: ["A. Mengadakan pos ronda malam (siskamling)", "B. Melaksanakan kerja bakti parit desa", "C. Mengadakan perlombaan sepak bola", "D. Piket menyiram tanaman sekolah"],
+                correct: 0,
+                exp: "Pos ronda malam didirikan bersama untuk mencegah tindak kriminalitas dan menjaga ketertiban lingkungan tempat tinggal."
+            },
+            {
+                q: "Bahasa Indonesia diikrarkan sebagai bahasa persatuan yang sangat sakral pada peristiwa bersejarah...",
+                a: ["A. Proklamasi Kemerdekaan RI", "B. Sumpah Pemuda tahun 1928", "C. Sidang pertama BPUPKI", "D. Pengesahan Hari Lahir Pancasila"],
+                correct: 1,
+                exp: "Butir ketiga Sumpah Pemuda berbunyi 'Menjunjung bahasa persatuan, bahasa Indonesia'."
+            },
+            {
+                q: "Sikap buruk yang harus kita hindari saat bekerja sama dalam keberagaman suku adalah...",
+                a: ["A. Saling menghormati tata cara ibadah orang lain", "B. Merasa kebudayaan suku sendiri adalah yang paling hebat", "C. Suka membantu tanpa mengharapkan pujian", "D. Bersedia mendengarkan usulan orang lain saat rapat"],
+                correct: 1,
+                exp: "Menganggap suku sendiri paling hebat (chauvinisme/etnosentrisme) dapat merusak persatuan gotong royong."
+            },
+            {
+                q: "Apakah manfaat utama menggunakan Bahasa Indonesia saat kita berwisata ke daerah lain yang berbeda bahasa?",
+                a: ["A. Kita akan dianggap sebagai orang asing luar negeri", "B. Kita bisa mudah berkomunikasi dan berbelanja dengan penduduk setempat", "C. Kita bisa mendapatkan seluruh barang dengan gratis", "D. Kita dibebaskan dari kewajiban membayar tiket masuk wisata"],
+                correct: 1,
+                exp: "Bahasa Indonesia mempermudah interaksi antara wisatawan dan warga lokal dari daerah yang memiliki bahasa ibu berbeda."
+            },
+            {
+                q: "Pelaksanaan gotong royong di Indonesia didasari oleh prinsip mulia yaitu asas...",
+                a: ["A. Kekeluargaan dan kebersamaan", "B. Keuntungan finansial pribadi", "C. Kekuasaan mutlak pemimpin", "D. Keterpaksaan karena takut dihukum"],
+                correct: 0,
+                exp: "Asas kekeluargaan menempatkan seluruh warga sebagai bagian keluarga besar yang saling memiliki tanggung jawab moral membantu."
+            },
+            {
+                q: "Contoh kerja sama di kelas yang paling baik menunjukkan nilai kekompakan adalah...",
+                a: ["A. Membuat gaduh bersama-sama saat guru sedang keluar kelas", "B. Menjalankan piket kebersihan kelas sesuai jadwal dengan adil", "C. Membantu memberi sontekan rumus matematika kepada sahabat", "D. Membolos bersama-sama untuk pergi bermain game online"],
+                correct: 1,
+                exp: "Piket kelas terjadwal melatih tanggung jawab bersama menjaga kenyamanan tempat belajar."
+            },
+            {
+                q: "Ketika terjadi musibah kebakaran di desa sebelah, aksi gotong royong kemanusiaan yang tepat kita lakukan adalah...",
+                a: ["A. Beramai-ramai menonton kebakaran dari dekat", "B. Mengambil video musibah demi popularitas media sosial", "C. Mengumpulkan donasi pakaian layak pakai serta bahan makanan dasar", "D. Mengabaikan saja karena bukan desa kita yang terkena musibah"],
+                correct: 2,
+                exp: "Menggalang bantuan pakaian, obat, dan makanan merupakan cerminan gotong royong meringankan beban penderitaan sesama."
+            },
+            {
+                q: "Kerja sama dan gotong royong di tengah keberagaman membuat persatuan bangsa kita menjadi...",
+                a: ["A. Lemah dan sangat mudah dipecah belah bangsa asing", "B. Kokoh, bersatu padu, dan harmonis", "C. Miskin karena banyak memberi sumbangan", "D. Terasingkan dari pergaulan dunia internasional"],
+                correct: 1,
+                exp: "Persatuan yang kokoh lahir dari kerukunan kerja sama seluruh elemen masyarakat yang beragam."
+            }
+        ];
+
+        const questionsBab4 = [
+            {
+                q: "Sila pertama Pancasila 'Ketuhanan Yang Maha Esa' dilambangkan dengan simbol...",
+                a: ["A. Rantai emas berbentuk lingkaran dan persegi", "B. Bintang emas bersudut lima berlatar hitam", "C. Pohon beringin yang kokoh rindang", "D. Kepala banteng berwarna hitam merah"],
+                correct: 1,
+                exp: "Bintang emas merupakan lambang Sila ke-1 yang melambangkan cahaya rohani dari Tuhan untuk seluruh umat manusia."
+            },
+            {
+                q: "Menghormati hak ibadah teman yang berlainan agama merupakan pengamalan Pancasila sila ke-...",
+                a: ["A. Satu (Ketuhanan Yang Maha Esa)", "B. Dua (Kemanusiaan yang Adil dan Beradab)", "C. Tiga (Persatuan Indonesia)", "D. Empat (Kerakyatan yang Dipimpin oleh Hikmat...)"],
+                correct: 0,
+                exp: "Menghormati ibadah pemeluk agama lain adalah penerapan nyata dari toleransi beragama sila ke-1."
+            },
+            {
+                q: "Sila kedua Pancasila yang berbunyi 'Kemanusiaan yang adil dan beradab' disimbolkan oleh gambar...",
+                a: ["A. Kepala banteng", "B. Rantai emas mata bulat dan persegi", "C. Padi dan kapas", "D. Bintang bersudut lima"],
+                correct: 1,
+                exp: "Rantai emas melambangkan hubungan timbal balik antar manusia yang saling membutuhkan dan bersatu kokoh."
+            },
+            {
+                q: "Sila ketiga 'Persatuan Indonesia' mendidik kita untuk selalu mengutamakan kepentingan...",
+                a: ["A. Keuntungan dan kesenangan pribadi", "B. Kelompok politik atau geng bermain kita saja", "C. Keselamatan dan kemajuan bangsa serta negara", "D. Anggota keluarga inti di dalam rumah"],
+                correct: 2,
+                exp: "Sila ke-3 mengajarkan patriotisme untuk mendahulukan kepentingan umum, bangsa, dan negara di atas kepentingan egois."
+            },
+            {
+                q: "Melakukan musyawarah mufakat untuk memilih ketua kelas baru merupakan wujud nyata pengamalan Pancasila sila ke-...",
+                a: ["A. Dua", "B. Tiga", "C. Empat", "D. Lima"],
+                correct: 2,
+                exp: "Sila ke-4 menekankan musyawarah mufakat dalam pengambilan keputusan bersama guna mencapai kebaikan bersama."
+            },
+            {
+                q: "Berbuat adil kepada semua teman, menghormati hak milik orang lain, serta gemar menabung merupakan contoh nilai luhur sila ke-...",
+                a: ["A. Dua", "B. Tiga", "C. Empat", "D. Lima"],
+                correct: 3,
+                exp: "Sila ke-5 'Keadilan Sosial bagi Seluruh Rakyat Indonesia' mencakup keadilan sosial, hak-kewajiban seimbang, dan kebiasaan hidup hemat."
+            },
+            {
+                q: "Siapakah tokoh nasional yang secara resmi mengusulkan nama 'Pancasila' pada pidato tanggal 1 Juni 1945?",
+                a: ["A. Drs. Moh. Hatta", "B. Ir. Soekarno", "C. Mr. Mohammad Yamin", "D. Mr. Soepomo"],
+                correct: 1,
+                exp: "Ir. Soekarno menyampaikan pidato rumusan dasar negara dan mengusulkan nama Pancasila pada 1 Juni 1945."
+            },
+            {
+                q: "Badan bentukan Indonesia-Jepang yang bertugas merancang rumusan awal Pancasila dan dasar negara adalah...",
+                a: ["A. PPKI (Panitia Persiapan Kemerdekaan Indonesia)", "B. BPUPKI (Badan Penyelidik Usaha-usaha Persiapan Kemerdekaan Indonesia)", "C. KNIP (Komite Nasional Indonesia Pusat)", "D. DPR (Dewan Perwakilan Rakyat)"],
+                correct: 1,
+                exp: "BPUPKI dibentuk untuk mempelajari dan menyelidiki hal-hal penting guna mendirikan negara Indonesia merdeka."
+            },
+            {
+                q: "Sidang pertama BPUPKI yang membahas rumusan dasar negara Indonesia merdeka berlangsung pada tanggal...",
+                a: ["A. 29 Mei - 1 Juni 1945", "B. 10 - 17 Juli 1945", "C. 17 Agustus 1945", "D. 18 Agustus 1945"],
+                correct: 0,
+                exp: "Sidang I BPUPKI fokus melahirkan gagasan dasar negara Pancasila dari 29 Mei hingga 1 Juni 1945."
+            },
+            {
+                q: "Berikut ini adalah tiga tokoh utama perumus usulan dasar negara dalam sidang BPUPKI, KECUALI...",
+                a: ["A. Mr. Mohammad Yamin", "B. Mr. Soepomo", "C. Ir. Soekarno", "D. Raden Saleh"],
+                correct: 3,
+                exp: "Raden Saleh adalah seorang pelukis legendaris masa kolonial, bukan perumus dasar negara dalam sidang BPUPKI."
+            },
+            {
+                q: "Tokoh bangsa perumus Pancasila yang dikenal cerdas dan dipercaya menjadi Wakil Presiden pertama Republik Indonesia adalah...",
+                a: ["A. Ir. Soekarno", "B. Drs. Moh. Hatta", "C. Mr. Ahmad Soebardjo", "D. K.H. Wahid Hasyim"],
+                correct: 1,
+                exp: "Drs. Moh. Hatta adalah rekan dwitunggal Soekarno yang menjabat sebagai Wakil Presiden RI pertama."
+            },
+            {
+                q: "Sikap keteladanan yang ditunjukkan oleh tokoh perumus Pancasila ketika menghadapi perbedaan pendapat dalam sidang adalah...",
+                a: ["A. Memaksakan kehendak pribadinya dengan emosional", "B. Saling bermusuhan dan memboikot hasil rapat", "C. Menghargai perbedaan pendapat dan tetap mengutamakan persatuan", "D. Meninggalkan ruangan sidang karena marah usulannya ditolak"],
+                correct: 2,
+                exp: "Para pendiri bangsa berjiwa besar mengutamakan musyawarah, mufakat, toleransi, dan persatuan di atas kepentingan pribadi."
+            },
+            {
+                q: "Bagaimana cara murid SD meneladani jiwa patriotisme dan cinta tanah air para pahlawan perumus Pancasila?",
+                a: ["A. Bermain game di gawai sepanjang hari tanpa jeda", "B. Belajar dengan giat, rajin, disiplin, dan mencintai produk lokal", "C. Membeli mainan impor mahal agar dipuji teman", "D. Mencontek pekerjaan teman agar nilai raport selalu sempurna"],
+                correct: 1,
+                exp: "Belajar tekun dan berkontribusi positif di sekolah adalah cara mengisi kemerdekaan yang diwariskan para pahlawan."
+            },
+            {
+                q: "Dokumen rancangan pembukaan Undang-Undang Dasar yang dirumuskan Panitia Sembilan pada 22 Juni 1945 dinamakan...",
+                a: ["A. Piagam Jakarta (Jakarta Charter)", "B. Teks Proklamasi Kemerdekaan", "C. Piagam PBB (UN Charter)", "D. Supersemar"],
+                correct: 0,
+                exp: "Piagam Jakarta merupakan dokumen historis rancangan pembukaan UUD 1945 yang memuat draf awal Pancasila."
+            },
+            {
+                q: "Simbol sila kelima Pancasila 'Keadilan Sosial bagi Seluruh Rakyat Indonesia' diwakili oleh...",
+                a: ["A. Kepala banteng", "B. Pohon beringin", "C. Rantai emas", "D. Padi dan Kapas"],
+                correct: 3,
+                exp: "Padi melambangkan pangan (makanan) dan kapas melambangkan sandang (pakaian) sebagai kebutuhan pokok kemakmuran rakyat."
+            },
+            {
+                q: "Mengapa para tokoh pendiri bangsa rela berkorban waktu, pikiran, dan tenaga demi merumuskan Pancasila?",
+                a: ["A. Agar mendapatkan gaji bulanan yang sangat besar", "B. Demi tercapainya kemerdekaan dan kedaulatan bangsa Indonesia seutuhnya", "C. Supaya dipuji dan mendapat penghargaan bergengsi luar negeri", "D. Karena terpaksa di bawah todongan senjata penjajah Jepang"],
+                correct: 1,
+                exp: "Perjuangan para pendiri bangsa murni didasari keikhlasan mencintai tanah air demi kemerdekaan generasi mendatang."
+            },
+            {
+                q: "Manakah contoh tindakan siswa yang bertanggung jawab melaksanakan kewajiban kelas sesuai nilai kepahlawanan Pancasila?",
+                a: ["A. Melarikan diri pulang ke rumah saat giliran piket kelas", "B. Berani dan ikhlas menyapu ruang kelas demi kenyamanan bersama", "C. Meminta upah uang jajan kepada guru setelah piket", "D. Menyuruh teman piket lain mengerjakan bagian tugas kita"],
+                correct: 1,
+                exp: "Melaksanakan piket dengan ikhlas melatih kebiasaan bertanggung jawab, disiplin, dan berbakti sosial di kelas."
+            },
+            {
+                q: "Sila keempat Pancasila 'Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan...' dilambangkan oleh...",
+                a: ["A. Pohon beringin", "B. Kepala banteng", "C. Bintang", "D. Padi dan kapas"],
+                correct: 1,
+                exp: "Banteng adalah hewan sosial yang suka berkumpul. Melambangkan musyawarah di mana orang-orang berdiskusi mengambil keputusan."
+            },
+            {
+                q: "Apabila pendapat pribadimu tidak terpilih dalam keputusan musyawarah kelas, sikap kesatria yang benar adalah...",
+                a: ["A. Marah-marah dan mencorat-coret fasilitas sekolah", "B. Menolak bekerja sama dan memusuhi teman sekelas", "C. Menerima dengan lapang dada dan ikut menyukseskan keputusan bersama", "D. Membujuk wali kelas agar membatalkan rapat"],
+                correct: 2,
+                exp: "Sikap berjiwa besar menerima hasil musyawarah adalah wujud dari pengamalan nilai kebijaksanaan Pancasila sila ke-4."
+            },
+            {
+                q: "Pancasila secara hukum sah ditetapkan sebagai dasar negara Indonesia merdeka pada sidang PPKI tanggal...",
+                a: ["A. 1 Juni 1945", "B. 17 Agustus 1945", "C. 18 Agustus 1945", "D. 20 Mei 1908"],
+                correct: 2,
+                exp: "Satu hari pasca Proklamasi, tepatnya 18 Agustus 1945, PPKI menetapkan UUD 1945 dan Pancasila sebagai dasar negara sah RI."
+            }
+        ];
+
+        /* ---------------- VARIABEL STATE GAME ---------------- */
+        let state = {
+            playerName: "Ksatria Pancasila",
+            selectedHeroId: null,
+            currentChapter: 3,
+            currentQuestionIdx: 0,
+            gold: 0,
+            hp: 100,
+            maxHp: 100,
+            enemyHp: 100,
+            enemyMaxHp: 100,
+            streak: 0,
+            bab3Score: 0,
+            bab4Score: 0,
+            inventory: [],
+            rank: "Warrior III",
+            activeQuizSet: [],
+            isAudioEnabled: false,
+            synth: null,
+            bgmSynth: null,
+            bgmLoop: null,
+            doubleDamageNext: false,
+            shieldActive: false,
+            shieldUses: 0,
+            streakProgressHero3: 0
+        };
+
+        // Inisialisasi Audio Synth
+        function initSynth() {
+            if (!state.synth) {
+                state.synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                state.synth.set({
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 0.5 }
+                });
+            }
+        }
+
+        // Inisialisasi Musik Latar Belakang (BGM) Berkelanjutan
+        function initBGM() {
+            if (!state.bgmSynth) {
+                // Gunakan Synth lembut dengan getaran retro 8-bit ceria
+                state.bgmSynth = new Tone.MonoSynth({
+                    oscillator: { type: "sine" },
+                    filter: { Q: 1, type: "lowpass", frequency: 1200 },
+                    envelope: { attack: 0.1, decay: 0.1, sustain: 0.8, release: 0.6 },
+                    filterEnvelope: { attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.2, baseFrequency: 300, octaves: 4 }
+                }).toDestination();
+                
+                state.bgmSynth.volume.value = -18; // Atur volume latar agar tidak mengganggu suara soal
+
+                // Melodi Petualangan Sederhana (Pentasila Adventure Melody)
+                const melody = [
+                    "C4", "E4", "G4", "A4", "G4", "E4", "C4", "D4",
+                    "E4", "G4", "C5", "E5", "D5", "B4", "G4", "B4",
+                    "A4", "C5", "E5", "F5", "E5", "C5", "A4", "B4",
+                    "C5", "G4", "E4", "F4", "G4", "F4", "D4", "C4"
+                ];
+                let index = 0;
+
+                // Loop melodi 8-bit yang diputar berkali-kali
+                state.bgmLoop = new Tone.Loop(time => {
+                    let note = melody[index % melody.length];
+                    state.bgmSynth.triggerAttackRelease(note, "6n", time);
+                    index++;
+                }, "4n");
+            }
+        }
+
+        function playSound(type) {
+            if (!state.isAudioEnabled) return;
+            initSynth();
+            try {
+                Tone.start();
+                if (type === 'correct') {
+                    state.synth.triggerAttackRelease(["E5", "G5", "C6"], "0.15");
+                } else if (type === 'incorrect') {
+                    state.synth.triggerAttackRelease(["A3", "F#3"], "0.3");
+                } else if (type === 'turret_boom') {
+                    const noise = new Tone.NoiseSynth().toDestination();
+                    noise.volume.value = -10;
+                    noise.triggerAttackRelease("0.5");
+                } else if (type === 'victory') {
+                    const now = Tone.now();
+                    state.synth.triggerAttackRelease("C4", "0.2", now);
+                    state.synth.triggerAttackRelease("E4", "0.2", now + 0.15);
+                    state.synth.triggerAttackRelease("G4", "0.2", now + 0.3);
+                    state.synth.triggerAttackRelease("C5", "0.5", now + 0.45);
+                } else if (type === 'streak') {
+                    state.synth.triggerAttackRelease(["G5", "C6", "E6"], "0.2");
+                }
+            } catch (e) {
+                console.log("Audio Error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            state.isAudioEnabled = !state.isAudioEnabled;
+            const icon = document.getElementById("musicIcon");
+            
+            if (state.isAudioEnabled) {
+                icon.className = "fa-solid fa-volume-high text-yellow-400";
+                Tone.start();
+                initSynth();
+                initBGM();
+                // Jalankan putaran musik latar belakang
+                Tone.Transport.start();
+                state.bgmLoop.start(0);
+                showFloatingAnnouncement("Musik Latar Diaktifkan! Selamat berpetualang.");
+            } else {
+                icon.className = "fa-solid fa-volume-mute text-slate-400";
+                if (state.bgmLoop) {
+                    state.bgmLoop.stop();
+                }
+                Tone.Transport.stop();
+            }
+        }
+
+        /* ---------------- STREAMING_CHUNK: Logika Aliran Layar Utama ---------------- */
+        // Berpindah dari Mulai ke Pemilihan Hero
+        function goToHeroSelection() {
+            const nameInput = document.getElementById("playerNameInput").value.trim();
+            if (nameInput) {
+                state.playerName = nameInput;
+            } else {
+                state.playerName = "Prajurit Cilik";
+            }
+            document.getElementById("startScreen").classList.add("hidden");
+            document.getElementById("heroScreen").classList.remove("hidden");
+        }
+
+        // Memilih Hero
+        function selectHero(heroId) {
+            state.selectedHeroId = heroId;
+            // Highlight selected card
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`heroCard-${i}`);
+                if (i === heroId) {
+                    card.classList.add("neon-border-gold", "border-amber-400");
+                    card.classList.remove("border-slate-800");
+                } else {
+                    card.classList.remove("neon-border-gold", "border-amber-400");
+                    card.classList.add("border-slate-800");
+                }
+            }
+        }
+
+        // Mulai Game (Beralih ke Map)
+        function startGame() {
+            if (!state.selectedHeroId) {
+                showFloatingAnnouncement("Pilih Heromu terlebih dahulu!");
+                return;
+            }
+            document.getElementById("heroScreen").classList.add("hidden");
+            document.getElementById("mapScreen").classList.remove("hidden");
+            updateMapScreen();
+        }
+
+        // Update Dashboard Peta
+        function updateMapScreen() {
+            // Update Rank berdasarkan total skor
+            const totalSelesai = state.bab3Score + state.bab4Score;
+            if (totalSelesai >= 35) state.rank = "MYTHICAL GLORY";
+            else if (totalSelesai >= 30) state.rank = "LEGEND I";
+            else if (totalSelesai >= 20) state.rank = "EPIC V";
+            else if (totalSelesai >= 10) state.rank = "MASTER II";
+            else if (totalSelesai >= 5) state.rank = "ELITE III";
+            else state.rank = "WARRIOR III";
+
+            document.getElementById("playerRankDisplay").innerText = "RANK: " + state.rank;
+            document.getElementById("goldCount").innerText = state.gold;
+
+            // Bab 3 Progress
+            document.getElementById("bab3ProgressText").innerText = `${state.bab3Score} / 20 Selesai`;
+            document.getElementById("bab3ProgressBar").style.width = `${(state.bab3Score / 20) * 100}%`;
+
+            // Buka Bab 4 jika Bab 3 Selesai (Skor Bab 3 minimal 10 benar / terselesaikan)
+            const lane4 = document.getElementById("laneBab4");
+            const lane4Overlay = document.getElementById("lane4Overlay");
+            const btnBab4 = document.getElementById("btnLaunchBab4");
+            if (state.bab3Score >= 12) { // Kriteria kelulusan minimal 60%
+                lane4.classList.remove("opacity-50");
+                lane4Overlay.classList.add("hidden");
+                btnBab4.removeAttribute("disabled");
+                btnBab4.className = "w-full bg-blue-500 hover:bg-blue-600 text-white font-extrabold py-3 rounded-xl transition tracking-wide text-sm shadow-md";
+                btnBab4.innerHTML = `SERANG LANE 2 <i class="fa-solid fa-swords ml-2"></i>`;
+            }
+        }
+
+        // Membuka Toko Belanja
+        function openShop() {
+            document.getElementById("shopGoldCount").innerText = state.gold;
+            updateInventoryUI();
+            document.getElementById("shopModal").classList.remove("hidden");
+        }
+
+        function closeShop() {
+            document.getElementById("shopModal").classList.add("hidden");
+        }
+
+        function buyItem(itemType, cost) {
+            if (state.gold < cost) {
+                showFloatingAnnouncement("Gold tidak cukup untuk membeli item!");
+                return;
+            }
+            state.gold -= cost;
+            state.inventory.push(itemType);
+            document.getElementById("goldCount").innerText = state.gold;
+            document.getElementById("shopGoldCount").innerText = state.gold;
+            updateInventoryUI();
+            showFloatingAnnouncement(`Berhasil membeli ${itemType.toUpperCase()}!`);
+        }
+
+        function updateInventoryUI() {
+            const container = document.getElementById("inventoryContainer");
+            if (state.inventory.length === 0) {
+                container.innerText = "Tidak ada item aktif";
+                return;
+            }
+            container.innerHTML = state.inventory.map(item => {
+                let badgeColor = "bg-slate-800 text-slate-300";
+                let icon = "";
+                if (item === 'shield') { badgeColor = "bg-blue-900 text-blue-300 border border-blue-500"; icon = "fa-shield-halved"; }
+                if (item === 'blade') { badgeColor = "bg-red-900 text-red-300 border border-red-500"; icon = "fa-burst"; }
+                if (item === 'immortality') { badgeColor = "bg-emerald-900 text-emerald-300 border border-emerald-500"; icon = "fa-heart-circle-bolt"; }
+                return `<span class="${badgeColor} px-2.5 py-1 rounded-md text-xs flex items-center gap-1"><i class="fa-solid ${icon}"></i> ${item.toUpperCase()}</span>`;
+            }).join("");
+        }
+
+        /* ---------------- STREAMING_CHUNK: Logika Jalannya Pertempuran ---------------- */
+        function launchChapter(chapterNum) {
+            state.currentChapter = chapterNum;
+            state.currentQuestionIdx = 0;
+            state.hp = 100;
+            state.activeQuizSet = chapterNum === 3 ? questionsBab3 : questionsBab4;
+            
+            // Konfigurasi Hero visual di Arena
+            const heroNameVisual = document.getElementById("heroNameVisual");
+            const heroVisualIcon = document.getElementById("heroVisualIcon");
+            if (state.selectedHeroId === 1) {
+                heroNameVisual.innerText = "GARUDA GUARDIAN";
+                heroVisualIcon.className = "fa-solid fa-shield-cat";
+                state.shieldUses = 2; // Khusus Hero 1 punya 2 free shields gratis
+            } else if (state.selectedHeroId === 2) {
+                heroNameVisual.innerText = "PANCASILA RANGER";
+                heroVisualIcon.className = "fa-solid fa-bullseye";
+            } else {
+                heroNameVisual.innerText = "SRIKANDI MAGE";
+                heroVisualIcon.className = "fa-solid fa-wand-magic-sparkles";
+            }
+
+            // Ganti musuh berdasarkan Bab
+            const enemyNameVisual = document.getElementById("enemyNameVisual");
+            const enemyVisualIcon = document.getElementById("enemyVisualIcon");
+            if (chapterNum === 3) {
+                enemyNameVisual.innerText = "TURRET PERSILISIHAN";
+                enemyVisualIcon.className = "fa-solid fa-tower-observation";
+            } else {
+                enemyNameVisual.innerText = "MONSTER DISCORDIA (EGOIS)";
+                enemyVisualIcon.className = "fa-solid fa-dragon";
+            }
+
+            state.enemyMaxHp = 100;
+            state.enemyHp = 100;
+            
+            document.getElementById("mapScreen").classList.add("hidden");
+            document.getElementById("battleScreen").classList.remove("hidden");
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            // Sembunyikan panel feedback terlebih dahulu
+            document.getElementById("answerFeedback").className = "hidden";
+            
+            const totalQuestions = state.activeQuizSet.length;
+            if (state.currentQuestionIdx >= totalQuestions) {
+                // Semua soal terjawab
+                finishChapter();
+                return;
+            }
+
+            const currentQ = state.activeQuizSet[state.currentQuestionIdx];
+            document.getElementById("questionCategory").innerText = `Bab ${state.currentChapter} - Pertanyaan ${state.currentQuestionIdx + 1}`;
+            document.getElementById("questionIndexText").innerText = `Soal ${state.currentQuestionIdx + 1} dari ${totalQuestions}`;
+            document.getElementById("questionText").innerText = currentQ.q;
+
+            // Update bar status visual
+            updateBattleVisuals();
+
+            // Render opsi jawaban
+            const container = document.getElementById("answersContainer");
+            container.innerHTML = "";
+            currentQ.a.forEach((ans, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left px-5 py-4 rounded-xl text-slate-200 text-sm md:text-base font-semibold hover:border-blue-500/50 transition-all duration-150 transform hover:scale-[1.01]";
+                btn.onclick = () => checkAnswer(idx);
+                btn.innerText = ans;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateBattleVisuals() {
+            document.getElementById("playerHpText").innerText = `${state.hp}/100`;
+            document.getElementById("playerHpBar").style.width = `${state.hp}%`;
+            document.getElementById("enemyHpText").innerText = `${state.enemyHp}/100`;
+            document.getElementById("enemyHpBar").style.width = `${state.enemyHp}%`;
+            document.getElementById("streakCount").innerText = state.streak;
+            
+            if (state.hp <= 30) {
+                document.getElementById("playerHpBar").className = "bg-red-500 h-2 rounded-full";
+            } else {
+                document.getElementById("playerHpBar").className = "bg-emerald-500 h-2 rounded-full";
+            }
+        }
+
+        /* ---------------- STREAMING_CHUNK: Mengevaluasi Jawaban Murid ---------------- */
+        function checkAnswer(selectedIdx) {
+            const currentQ = state.activeQuizSet[state.currentQuestionIdx];
+            const isCorrect = selectedIdx === currentQ.correct;
+
+            // Matikan tombol agar tidak bisa klik ganda
+            const btns = document.getElementById("answersContainer").querySelectorAll("button");
+            btns.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === currentQ.correct) {
+                    btn.classList.add("bg-emerald-950/80", "border-emerald-500", "text-emerald-300");
+                } else if (idx === selectedIdx) {
+                    btn.classList.add("bg-rose-950/80", "border-rose-500", "text-rose-300");
+                }
+            });
+
+            const feedbackPanel = document.getElementById("answerFeedback");
+            const fbTitle = document.getElementById("feedbackTitle");
+            const fbExp = document.getElementById("feedbackExplanation");
+
+            if (isCorrect) {
+                // Jawaban Benar!
+                playSound('correct');
+                state.streak++;
+                
+                // Tambah skor bab bersangkutan
+                if (state.currentChapter === 3) state.bab3Score++;
+                else state.bab4Score++;
+
+                // Perhitungan Damage & Efek Hero
+                let damage = 10; // Base damage (tiap benar ngurangin HP musuh 10%, jadi pas 10 pertanyaan hancur)
+                
+                // Efek Item: Blade of Despair
+                if (state.inventory.includes('blade')) {
+                    damage *= 2;
+                    state.inventory = state.inventory.filter(i => i !== 'blade');
+                    showFloatingAnnouncement("CRITICAL DAMAGE! Efek Blade of Despair diaktifkan!");
+                }
+
+                // Efek Hero 2: Pancasila Ranger (Multiplier Gold saat Streak)
+                let goldReward = 20;
+                if (state.selectedHeroId === 2 && state.streak >= 3) {
+                    goldReward = Math.floor(goldReward * 1.5);
+                    showFloatingAnnouncement("BONUS GOLD! Kekuatan Ranger Beruntun aktif!");
+                }
+                state.gold += goldReward;
+
+                // Efek Hero 3: Srikandi Mage (Menyembuhkan HP jika beruntun)
+                if (state.selectedHeroId === 3) {
+                    state.streakProgressHero3++;
+                    if (state.streakProgressHero3 >= 3) {
+                        state.hp = Math.min(100, state.hp + 20);
+                        state.streakProgressHero3 = 0;
+                        showFloatingAnnouncement("PULIH! Srikandi menyembuhkan 20 HP!");
+                    }
+                }
+
+                state.enemyHp = Math.max(0, state.enemyHp - damage);
+
+                // Announcer MLBB
+                triggerAnnouncer();
+
+                // Animasi goyang/kena hantam pada monster
+                const enemyWrapper = document.getElementById("enemyVisualIconWrapper");
+                enemyWrapper.classList.add("animate-shake");
+                setTimeout(() => enemyWrapper.classList.remove("animate-shake"), 300);
+
+                feedbackPanel.className = "mt-4 p-4 rounded-xl border border-emerald-500 bg-emerald-950/20 text-emerald-400";
+                fbTitle.innerText = "🎯 SERANGAN BERHASIL (JAWABAN BENAR!)";
+                fbExp.innerText = currentQ.exp;
+
+            } else {
+                // Jawaban Salah!
+                playSound('incorrect');
+                state.streak = 0;
+                state.streakProgressHero3 = 0;
+
+                // Penanganan Perlindungan: Hero 1 Guardian Shield atau Item Athena's Shield
+                let isShielded = false;
+                if (state.selectedHeroId === 1 && state.shieldUses > 0) {
+                    state.shieldUses--;
+                    isShielded = true;
+                    showFloatingAnnouncement(`DILINDUNGI! Perisai Garuda menahan serangan! Sisa perisai: ${state.shieldUses}`);
+                } else if (state.inventory.includes('shield')) {
+                    state.inventory = state.inventory.filter(i => i !== 'shield');
+                    isShielded = true;
+                    showFloatingAnnouncement("DILINDUNGI! Athena's Shield melindungimu dari kerusakan!");
+                }
+
+                if (!isShielded) {
+                    state.hp = Math.max(0, state.hp - 20); // Pengurangan HP
+                }
+
+                // Cek Kematian Player (HP = 0)
+                if (state.hp <= 0) {
+                    if (state.inventory.includes('immortality')) {
+                        state.inventory = state.inventory.filter(i => i !== 'immortality');
+                        state.hp = 100;
+                        showFloatingAnnouncement("REVIVED! Kehidupan abadi Immortality bangkit kembali!");
+                    } else {
+                        // Forgivable Game Over untuk Anak SD: pulihkan HP kembali ke 40 agar bisa lanjut belajar
+                        state.hp = 40;
+                        showFloatingAnnouncement("TERKAPAR! Gurumu memberimu ramuan penyembuh (HP kembali ke 40), ayo bangkit!");
+                    }
+                }
+
+                // Animasi goyang player terpukul
+                const heroIcon = document.getElementById("heroGraphic");
+                heroIcon.classList.add("animate-shake");
+                setTimeout(() => heroIcon.classList.remove("animate-shake"), 300);
+
+                feedbackPanel.className = "mt-4 p-4 rounded-xl border border-rose-500 bg-rose-950/20 text-rose-400";
+                fbTitle.innerText = "🛡️ SERANGAN MUSUH MASUK (JAWABAN KURANG TEPAT)";
+                fbExp.innerText = "Jawaban yang benar adalah pilihan hijau di atas. " + currentQ.exp;
+            }
+
+            updateBattleVisuals();
+            document.getElementById("goldCount").innerText = state.gold;
+        }
+
+        // Beralih ke pertanyaan berikutnya
+        function nextBattleStep() {
+            state.currentQuestionIdx++;
+            loadQuestion();
+        }
+
+        // Trigger Suara/Visual Announcer Sesuai Tingkat Streak
+        function triggerAnnouncer() {
+            const banner = document.getElementById("announcerBanner");
+            let text = "";
+            if (state.streak === 1) text = "FIRST BLOOD!";
+            else if (state.streak === 2) text = "DOUBLE KILL!";
+            else if (state.streak === 3) { text = "TRIPLE KILL!"; playSound('streak'); }
+            else if (state.streak === 4) text = "MANIAC!";
+            else if (state.streak >= 5) { text = "SAVAGE!"; playSound('streak'); }
+
+            banner.innerText = text;
+            banner.classList.remove("scale-0");
+            banner.classList.add("scale-100");
+            setTimeout(() => {
+                banner.classList.remove("scale-100");
+                banner.classList.add("scale-0");
+            }, 1200);
+        }
+
+        // Menampilkan Pesan Toast Mengambang Sementara
+        function showFloatingAnnouncement(text) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-amber-400 text-amber-300 font-semibold px-6 py-3 rounded-xl shadow-lg text-sm tracking-wide text-center";
+            toast.innerText = text;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /* ---------------- STREAMING_CHUNK: Menyelesaikan Chapter / Lane ---------------- */
+        function finishChapter() {
+            playSound('victory');
+            playSound('turret_boom');
+            
+            // Tentukan keberhasilan
+            const scoreNum = state.currentChapter === 3 ? state.bab3Score : state.bab4Score;
+            const threshold = 12; // 60% lulus
+
+            if (scoreNum >= threshold) {
+                showFloatingAnnouncement(`VICTORY! LANE ${state.currentChapter - 2} DIHANCURKAN!`);
+            } else {
+                showFloatingAnnouncement(`SELESAI! Berlatih lagi ya agar bisa menghancurkan Turret sepenuhnya!`);
+            }
+
+            document.getElementById("battleScreen").classList.add("hidden");
+            
+            if (state.currentChapter === 3) {
+                // Selesai Bab 3, kembali ke Peta (untuk buka Bab 4)
+                document.getElementById("mapScreen").classList.remove("hidden");
+                updateMapScreen();
+            } else {
+                // Selesai Bab 4, langsung buka sertifikat kelulusan game
+                showResultsAndCertificate();
+            }
+        }
+
+        function showResultsAndCertificate() {
+            document.getElementById("mapScreen").classList.add("hidden");
+            document.getElementById("resultsScreen").classList.remove("hidden");
+
+            // Tampilkan Data Hasil Akhir
+            document.getElementById("scoreBab3Display").innerText = `${state.bab3Score} / 20`;
+            document.getElementById("scoreBab4Display").innerText = `${state.bab4Score} / 20`;
+
+            const totalScore = state.bab3Score + state.bab4Score;
+            const percentage = Math.round((totalScore / 40) * 100);
+            document.getElementById("totalScorePercent").innerText = `${percentage}%`;
+
+            // Atur Badge Kelulusan
+            let rankText = "WARRIOR I";
+            if (percentage >= 90) rankText = "MYTHICAL GLORY (ISTIMEWA)";
+            else if (percentage >= 80) rankText = "LEGEND I (SANGAT BAIK)";
+            else if (percentage >= 70) rankText = "EPIC III (BAIK)";
+            else if (percentage >= 60) rankText = "MASTER V (CUKUP)";
+            else rankText = "ELITE III (PERLU BELAJAR LAGI)";
+
+            document.getElementById("rankBadgeDisplay").innerText = rankText;
+
+            // Atur Sertifikat
+            document.getElementById("certPlayerName").innerText = state.playerName.toUpperCase();
+            
+            const today = new Date();
+            const formattedDate = today.getDate() + ' ' + today.toLocaleString('id-ID', { month: 'long' }) + ' ' + today.getFullYear();
+            document.getElementById("certDate").innerText = formattedDate;
+        }
+
+        /* ---------------- FITUR CETAK DAN BERBAGI LINK ---------------- */
+        function printCertificate() {
+            window.print();
+        }
+
+        function copyGameLink() {
+            // Menggunakan execCommand copy sebagai fallback yang diizinkan untuk iframe
+            const mockUrl = window.location.href;
+            const dummy = document.createElement("input");
+            document.body.appendChild(dummy);
+            dummy.value = mockUrl;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showFloatingAnnouncement("Link game telah disalin ke papan klip! Siap dibagikan ke murid-murid.");
+        }
+
+        function resetGame() {
+            state = {
+                playerName: "Ksatria Pancasila",
+                selectedHeroId: null,
+                currentChapter: 3,
+                currentQuestionIdx: 0,
+                gold: 0,
+                hp: 100,
+                maxHp: 100,
+                enemyHp: 100,
+                enemyMaxHp: 100,
+                streak: 0,
+                bab3Score: 0,
+                bab4Score: 0,
+                inventory: [],
+                rank: "Warrior III",
+                activeQuizSet: [],
+                isAudioEnabled: false,
+                synth: null,
+                doubleDamageNext: false,
+                shieldActive: false,
+                shieldUses: 0,
+                streakProgressHero3: 0
+            };
+            document.getElementById("resultsScreen").classList.add("hidden");
+            document.getElementById("startScreen").classList.remove("hidden");
+            document.getElementById("playerNameInput").value = "";
+            
+            // Reset Highlight kartu hero
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`heroCard-${i}`);
+                card.classList.remove("neon-border-gold", "border-amber-400");
+                card.classList.add("border-slate-800");
+            }
+        }
+
+        /* ---------------- ANIMASI CANVAS PARTIKEL LATAR BELAKANG ---------------- */
+        const canvas = document.getElementById("particleCanvas");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * 0.4 - 0.2;
+                this.color = Math.random() > 0.5 ? "rgba(245, 158, 11, 0.4)" : "rgba(59, 130, 246, 0.4)";
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 60; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        
+        window.onload = function() {
+            animate();
+        };
+    </script>
+</body>
+</html>
